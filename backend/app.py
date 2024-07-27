@@ -9,16 +9,9 @@ from patient import Patient, Hospital
 
 app = Flask(__name__)
 
-@app.route('/hello', methods=['GET'])
-def test():
-    return "HELLO"
-
-@app.route('/driver/profile', methods=['GET'])
+@app.route('/driver/profile', methods=['GET', 'POST'])
 def handle_driver_profile():
-    # args= request.args
-    # id= args.get('id')
-    print("Inside get call")
-    return "driver_profile(id)"
+    return driver_profile()
 
 @app.route('/patient/profile', methods=['GET'])
 def handle_patient_profile():
@@ -45,5 +38,5 @@ if __name__ == '__main__':
     from config import get_supabase_client
 
     supabase = get_supabase_client()
-    print(supabase)
-    app.run(debug=True)
+
+    app.run(debug=True, use_reloader=False)
