@@ -1,10 +1,11 @@
 # driver.py
 
-from supabase import create_client, Client
 from config import get_supabase_client
 
+supabase = get_supabase_client()
+
 class Driver:
-    def __init__(self, id, name=None, vehicle_num=None, vehicle_type=None, curr_loc=None, is_active=None):
+    def __init__(self, id, name, vehicle_num, vehicle_type, curr_loc, is_active):
         self.id = id
         self.name = name
         self.vehicle_num = vehicle_num
@@ -22,34 +23,41 @@ class Driver:
             "Is_Active": self.is_active
         }
 
-    def set_profile(self, name, vehicle_num, vehicle_type, curr_loc, is_active):
-        self.name = name
-        self.vehicle_num = vehicle_num
-        self.vehicle_type = vehicle_type
-        self.curr_loc = curr_loc
-        self.is_active = is_active
-
     def save_to_db(self):
         data = self.get_profile()
-        supabase = get_supabase_client()
-        response = supabase.table('drivers').upsert(data).execute()
+        try:
+            response = supabase.table('drivers').upsert(data).execute()
+        except Exception:
+            return {"error": "Could not save data" , "code":404}
         return response
 
     @classmethod
     def fetch_from_db(cls, driver_id):
-        supabase = get_supabase_client()
-        print
-        response = supabase.table('drivers').select('*').eq('ID', driver_id).execute()
-        print(response)
-        if response.data:
-            driver_data = response.data[0]  # Assuming ID is unique, so response.data should have one record
-            return cls(
-                id=driver_data['ID'],
-                name=driver_data.get('Name'),
-                vehicle_num=driver_data.get('Vehicle_Number'),
-                vehicle_type=driver_data.get('Vehicle_Type'),
-                curr_loc=driver_data.get('Current_Location'),
-                is_active=driver_data.get('Is_Active')
-            )
+        response = supabase.table('drivers').select('*').eq('ID',driver_id).execute()
+        try:
+            data = response.data[0]
+        except IndexError:
+            return {"error":"No data in database","code":404}
+        return data
+
+    def get_request(self, patient, hospital, is_emergency):
+        return {
+            "Patient": patient.get_profile(),
+            "Hospital": hospital.get_details(),
+            "Is Emergency": is_emergency
+        }
+
+    def action_on_request(self, is_accept, request_data):
+        if is_accept:
+            trip_data = {
+                "Driver ID": self.id,
+                "Patient ID": request_data['Patient']['ID'],
+                "Hospital ID": request_data['Hospital']['ID'],
+                "Start Location": request_data['Patient']['Current Location'],
+                "End Location": request_data['Hospital']['Location'],
+                "Is Emergency": request_data['Is Emergency']
+            }
+            response = supabase.table('trips').insert(trip_data).execute()
+            return "Request accepted and trip started", response
         else:
-            return None
+            return "Request rejected"
