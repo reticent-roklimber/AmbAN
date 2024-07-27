@@ -17,36 +17,28 @@ class Driver:
         return {
             "ID": self.id,
             "Name": self.name,
-            "Vehicle Number": self.vehicle_num,
-            "Vehicle Type": self.vehicle_type,
-            "Current Location": self.curr_loc,
-            "Is Active": self.is_active
+            "Vehicle_Number": self.vehicle_num,
+            "Vehicle_Type": self.vehicle_type,
+            "Current_Location": self.curr_loc,
+            "Is_Active": self.is_active
         }
-
-    def set_profile(self, name, vehicle_num, vehicle_type, curr_loc, is_active):
-        self.name = name
-        self.vehicle_num = vehicle_num
-        self.vehicle_type = vehicle_type
-        self.curr_loc = curr_loc
-        self.is_active = is_active
 
     def save_to_db(self):
         data = self.get_profile()
-        response = supabase.table('drivers').upsert(data).execute()
+        try:
+            response = supabase.table('drivers').upsert(data).execute()
+        except Exception:
+            return {"error": "Could not save data" , "code":404}
         return response
 
     @classmethod
     def fetch_from_db(cls, driver_id):
-        response = supabase.table('drivers').select('*').eq('ID', driver_id).execute()
-        data = response.data[0]
-        return cls(
-            id=data['ID'],
-            name=data['Name'],
-            vehicle_num=data['Vehicle Number'],
-            vehicle_type=data['Vehicle Type'],
-            curr_loc=data['Current Location'],
-            is_active=data['Is Active']
-        )
+        response = supabase.table('drivers').select('*').eq('ID',driver_id).execute()
+        try:
+            data = response.data[0]
+        except IndexError:
+            return {"error":"No data in database","code":404}
+        return data
 
     def get_request(self, patient, hospital, is_emergency):
         return {

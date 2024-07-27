@@ -1,30 +1,32 @@
 # driver_routes.py
 
-from flask import jsonify, request
+from flask import jsonify, request,make_response
 from driver import Driver
-
-drivers = {}
 
 def driver_profile():
     if request.method == 'POST':
         data = request.json
-        driver_id = data['id']
+        print(data)
+
+        driver_id = data['ID']
         driver = Driver(
             id=driver_id,
-            name=data['name'],
-            vehicle_num=data['vehicle_num'],
-            vehicle_type=data['vehicle_type'],
-            curr_loc=data['curr_loc'],
-            is_active=data['is_active']
+            name=data['Name'],
+            vehicle_num=data['Vehicle_Number'],
+            vehicle_type=data['Vehicle_Type'],
+            curr_loc=data['Current_Location'],
+            is_active=data['Is_Active']
         )
-        drivers[driver_id] = driver
+        
         driver.save_to_db()
         return jsonify({"message": "Driver profile set successfully"}), 201
     elif request.method == 'GET':
         driver_id = request.args.get('id')
-        driver = drivers.get(driver_id)
+        driver = Driver.fetch_from_db(driver_id)
         if driver:
-            return jsonify(driver.get_profile()), 200
+            response = make_response(jsonify(driver),200)
+            response.headers.set("content-type","application/json")
+            return response
         else:
             return jsonify({"message": "Driver not found"}), 404
 
@@ -33,7 +35,7 @@ def action_on_request():
     driver_id = data['driver_id']
     is_accept = data['is_accept']
 
-    driver = drivers.get(driver_id)
+    # driver = drivers.get(driver_id)
     if driver:
         action_response, _ = driver.action_on_request(is_accept, data['request_data'])
         return jsonify({"message": action_response}), 200
