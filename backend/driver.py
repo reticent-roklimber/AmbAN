@@ -1,3 +1,5 @@
+# driver.py
+
 from supabase import create_client, Client
 from config import get_supabase_client
 
@@ -33,21 +35,21 @@ class Driver:
         response = supabase.table('drivers').upsert(data).execute()
         return response
 
-    def get_profile(driver_id):
-        print("Inside get profile...")
+    @classmethod
+    def fetch_from_db(cls, driver_id):
         supabase = get_supabase_client()
+        print
         response = supabase.table('drivers').select('*').eq('ID', driver_id).execute()
-        
+        print(response)
         if response.data:
             driver_data = response.data[0]  # Assuming ID is unique, so response.data should have one record
-            print(driver_data)
-            return   {
-                    "id": driver_data['ID'],
-                    "name": driver_data.get('Name'),
-                    "vehicle_num": driver_data.get('Vehicle_Number'),
-                    "vehicle_type": driver_data.get('Vehicle_Type'),
-                    "curr_loc": driver_data.get('Current_Location'),
-                    "is_active": driver_data.get('Is_Active')
-                }
+            return cls(
+                id=driver_data['ID'],
+                name=driver_data.get('Name'),
+                vehicle_num=driver_data.get('Vehicle_Number'),
+                vehicle_type=driver_data.get('Vehicle_Type'),
+                curr_loc=driver_data.get('Current_Location'),
+                is_active=driver_data.get('Is_Active')
+            )
         else:
             return None
