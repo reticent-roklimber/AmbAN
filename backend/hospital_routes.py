@@ -6,26 +6,25 @@ from hospital import Hospital
 hospitals = {}
 
 def hospital_details():
-    hospital_id = request.args.get('id')
-    hospital = hospitals.get(hospital_id)
-    if hospital:
-        return jsonify(hospital.get_details()), 200
-    else:
-        return jsonify({"message": "Hospital not found"}), 404
-
-def create_hospital_profile():
-    data = request.json
-    hospital_id = data['id']
-    hospital = Hospital(
-        id=hospital_id,
-        name=data['name'],
-        location=data['location'],
-        phn_num=data['phn_num']
-    )
-    hospitals[hospital_id] = hospital
-    hospital.save_to_db()
-    return jsonify({"message": "Hospital profile set successfully"}), 201
-
+    if request.method == 'POST':
+        data = request.json
+        hospital = Hospital(
+            id=data['ID'],
+            name=data['Name'],
+            location=data['Location'],
+            phn_num=data['Phone_Number']
+        )
+        hospital.save_to_db()
+        return jsonify({"message": "Hospital profile set successfully"}), 201
+    elif request.method == 'GET':
+        hospital_id = request.args.get('id')
+        hospital_data = Hospital.fetch_from_db(hospital_id)
+        if hospital_data:
+            print(hospital_data)
+            return jsonify(hospital_data), 200
+        else:
+            return jsonify({"message": "Hospital not found"}), 404
+        
 def book_ambulance():
     data = request.json
     patient_id = data['patient_id']

@@ -2,8 +2,8 @@
 
 from flask import Flask,make_response
 from driver_routes import driver_profile, action_on_request
-from patient_routes import patient_profile, create_patient_profile, book_ambulance
-from hospital_routes import hospital_details, create_hospital_profile
+from patient_routes import patient_profile, book_ambulance
+from hospital_routes import hospital_details
 
 
 
@@ -14,21 +14,13 @@ def handle_driver_profile():
     print("handle_driver called")
     return driver_profile()
 
-@app.route('/patient/profile', methods=['GET'])
+@app.route('/patient/profile', methods=['GET','POST'])
 def handle_patient_profile():
     return patient_profile()
 
-@app.route('/patient/create_profile', methods=['POST'])
-def handle_create_patient_profile():
-    return create_patient_profile()
-
-@app.route('/hospital/details', methods=['GET'])
+@app.route('/hospital/profile', methods=['GET','POST'])
 def handle_hospital_details():
     return hospital_details()
-
-@app.route('/hospital/create_profile', methods=['POST'])
-def handle_create_hospital_profile():
-    return create_hospital_profile()
 
 @app.route('/book_ambulance', methods=['POST'])
 def handle_book_ambulance():

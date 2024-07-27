@@ -16,7 +16,7 @@ class Hospital:
             "ID": self.id,
             "Name": self.name,
             "Location": self.location,
-            "Phone Number": self.phn_num
+            "Phone_Number": self.phn_num
         }
 
     def save_to_db(self):
@@ -27,10 +27,8 @@ class Hospital:
     @classmethod
     def fetch_from_db(cls, hospital_id):
         response = supabase.table('hospitals').select('*').eq('ID', hospital_id).execute()
-        data = response.data[0]
-        return cls(
-            id=data['ID'],
-            name=data['Name'],
-            location=data['Location'],
-            phn_num=data['Phone Number']
-        )
+        try:
+            data = response.data[0]
+        except IndexError:
+            return {"error":"No data in database","code":404}
+        return data
