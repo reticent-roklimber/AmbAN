@@ -1,7 +1,7 @@
 # hospital_routes.py
 
 from flask import jsonify, request
-from patient import Hospital
+from hospital import Hospital
 
 hospitals = {}
 
@@ -23,7 +23,7 @@ def create_hospital_profile():
         phn_num=data['phn_num']
     )
     hospitals[hospital_id] = hospital
-    hospital.save_to_db()  # Save to Supabase
+    hospital.save_to_db()
     return jsonify({"message": "Hospital profile set successfully"}), 201
 
 def book_ambulance():
@@ -31,21 +31,14 @@ def book_ambulance():
     patient_id = data['patient_id']
     hospital_id = data['hospital_id']
     is_emergency = data['is_emergency']
-
-    from driver_routes import drivers
-    from patient_routes import patients
-
-    patient = patients.get(patient_id)
-    hospital = hospitals.get(hospital_id)
-
-    if not patient or not hospital:
-        return jsonify({"message": "Patient or Hospital not found"}), 404
-
     driver_id = data['driver_id']
-    driver = drivers.get(driver_id)
 
-    if driver and driver.is_active:
-        request_details = driver.get_request(patient, hospital, is_emergency)
-        return jsonify(request_details), 200
+    patient = Patient.fetch_from_db(patient_id)
+    hospital = Hospital.fetch_from_db(hospital_id)
+    driver = Driver.fetch_from_db(driver_id)
+
+    if patient and hospital and driver and driver.is_active:
+        request_data = driver.get_request(patient, hospital, is_emergency)
+        return jsonify({"request_data": request_data}), 200
     else:
-        return jsonify({"message": "Active driver not found"}), 404
+        return jsonify({"message": "Active driver or patient or hospital not found"}), 404

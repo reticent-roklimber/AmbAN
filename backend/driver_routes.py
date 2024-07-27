@@ -10,23 +10,19 @@ def driver_profile():
         data = request.json
         driver_id = data['id']
         driver = Driver(
-        id=1,
-        name="John Doe",
-        vehicle_num="ABC1234",
-        vehicle_type="Sedan",
-        curr_loc="Downtown",
-        is_active=True
-    )
+            id=driver_id,
+            name=data['name'],
+            vehicle_num=data['vehicle_num'],
+            vehicle_type=data['vehicle_type'],
+            curr_loc=data['curr_loc'],
+            is_active=data['is_active']
+        )
         drivers[driver_id] = driver
-        driver.save_to_db()  # Save to Supabase
+        driver.save_to_db()
         return jsonify({"message": "Driver profile set successfully"}), 201
     elif request.method == 'GET':
         driver_id = request.args.get('id')
-        if not driver_id:
-            return jsonify({"error": "ID parameter is required"}), 400
-        
-        driver = Driver.fetch_from_db(driver_id) 
-        print(driver) # Fetch from Supabase
+        driver = drivers.get(driver_id)
         if driver:
             return jsonify(driver.get_profile()), 200
         else:
@@ -39,9 +35,7 @@ def action_on_request():
 
     driver = drivers.get(driver_id)
     if driver:
-        action_response = driver.action_on_request(is_accept)
+        action_response, _ = driver.action_on_request(is_accept, data['request_data'])
         return jsonify({"message": action_response}), 200
     else:
         return jsonify({"message": "Driver not found"}), 404
-
-

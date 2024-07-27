@@ -1,11 +1,11 @@
 # app.py
 
-from flask import Flask, request
+from flask import Flask
 from driver_routes import driver_profile, action_on_request
-from patient_routes import patient_profile
-from hospital_routes import hospital_details, book_ambulance
-from driver import Driver
-from patient import Patient, Hospital
+from patient_routes import patient_profile, create_patient_profile, book_ambulance
+from hospital_routes import hospital_details, create_hospital_profile
+
+
 
 app = Flask(__name__)
 
@@ -17,9 +17,17 @@ def handle_driver_profile():
 def handle_patient_profile():
     return patient_profile()
 
+@app.route('/patient/create_profile', methods=['POST'])
+def handle_create_patient_profile():
+    return create_patient_profile()
+
 @app.route('/hospital/details', methods=['GET'])
 def handle_hospital_details():
     return hospital_details()
+
+@app.route('/hospital/create_profile', methods=['POST'])
+def handle_create_hospital_profile():
+    return create_hospital_profile()
 
 @app.route('/book_ambulance', methods=['POST'])
 def handle_book_ambulance():
@@ -29,14 +37,10 @@ def handle_book_ambulance():
 def handle_action_on_request():
     return action_on_request()
 
-
 if __name__ == '__main__':
-    # Creating some initial data for demonstration
-    from driver_routes import drivers
-    from patient_routes import patients
-    from hospital_routes import hospitals
+
     from config import get_supabase_client
 
     supabase = get_supabase_client()
 
-    app.run(debug=True, use_reloader=False)
+    app.run(debug=True)
