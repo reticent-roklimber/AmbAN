@@ -28,3 +28,4 @@ doc/api/
 
 /**/*/env
 /**/*/__pycache__
+backend/config.py
