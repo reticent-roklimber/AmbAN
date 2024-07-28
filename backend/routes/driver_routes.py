@@ -29,13 +29,33 @@ def driver_profile():
             return jsonify({"message": "Driver not found"}), 404
 
 def action_on_request():
+
     data = request.json
-    driver_id = data['driver_id']
+    print("data of action on request::::")
+    print(data)
+    request_id = data['request_id']
     is_accept = data['is_accept']
 
+    request_response = supabase.table('requests').select('*').eq('ID', request_id).execute()
+    request_data = request_response.data[0]
     # driver = drivers.get(driver_id)
-    if driver:
-        action_response, _ = driver.action_on_request(is_accept, data['request_data'])
-        return jsonify({"message": action_response}), 200
+  
+    if is_accept:
+        request_data['status'] = 'accepted'
+        trip_data = {
+            "request_id": request_id,
+            "driver_id": data['driver_id'],
+            "patient_id": request_data['patient_id'],
+            "hospital_id": request_data['hospital_id'],
+            "start_time": data['start_time'],
+            "end_time": None
+        }
+        supabase.table('trips').insert(trip_data).execute()
+        # return "Request accepted and trip started", response
     else:
-        return jsonify({"message": "Driver not found"}), 404
+        request_data['status'] = 'rejected'
+    
+    response = supabase.table('requests').upsert(request_data).execute()
+
+    return jsonify({"message": response.data}), 200
+    

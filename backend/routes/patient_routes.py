@@ -38,14 +38,31 @@ def book_ambulance():
     patient_id = data['patient_id']
     hospital_id = data['hospital_id']
     is_emergency = data['is_emergency']
-    driver_id = data['driver_id']
 
     patient = Patient.fetch_from_db(patient_id)
     hospital = Hospital.fetch_from_db(hospital_id)
-    driver = Driver.fetch_from_db(driver_id)
 
-    if patient and hospital and driver and driver.is_active:
-        request_data = driver.get_request(patient, hospital, is_emergency)
-        return jsonify({"request_data": request_data}), 200
+    if not (patient and hospital):
+        return jsonify({"message": "Patient or hospital not found"}), 404
+
+    active_drivers = Driver.fetch_active_drivers(patient.curr_loc)
+
+    if not active_drivers:
+        return jsonify({"message": "No active drivers available"}), 404
+
+    request_data = {
+        "patient_id": patient_id,
+        "hospital_id": hospital_id,
+        "is_emergency": is_emergency,
+        "status": "pending"
+    }
+
+    response = supabase.table('requests').insert(request_data).execute()
+
+    if response.status_code == 201:
+        for driver in active_drivers:
+            pass
+            # socketio.emit('new_request', driver.get_request(patient, hospital, is_emergency), room=driver.id)
+        return jsonify({"message": "Request created and drivers notified"}), 201
     else:
-        return jsonify({"message": "Active driver or patient or hospital not found"}), 404
+        return jsonify({"message": "Failed to create request"}), 500
