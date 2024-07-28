@@ -1,7 +1,7 @@
 # driver_routes.py
 
 from flask import jsonify, request,make_response
-from driver import Driver
+from users.driver import Driver
 
 def driver_profile():
     if request.method == 'POST':

@@ -1,38 +1,30 @@
-# patient_routes.py
+# hospital_routes.py
 
-from flask import jsonify, request,make_response
-from patient import Patient
-from driver import Driver
-from hospital import Hospital
+from flask import jsonify, request
+from users.hospital import Hospital
 
 hospitals = {}
 
-def patient_profile():
+def hospital_details():
     if request.method == 'POST':
         data = request.json
-        patient = Patient(
+        hospital = Hospital(
             id=data['ID'],
             name=data['Name'],
-            age=data['Age'],
-            gender=data['Age'],
-            curr_loc=data['Current_Location'],
-            phone=data['Phone_Number'],
-            email=data['Email']
+            location=data['Location'],
+            phn_num=data['Phone_Number']
         )
-        patient.save_to_db()
-        return jsonify({"message": "Patient profile set successfully"}), 201
-    
+        hospital.save_to_db()
+        return jsonify({"message": "Hospital profile set successfully"}), 201
     elif request.method == 'GET':
-        patient_id = request.args.get('id')
-        patient = Patient.fetch_from_db(patient_id)
-        if patient:
-            response = make_response(jsonify(patient),200)
-            response.headers.set("content-type","application/json")
-            return response
+        hospital_id = request.args.get('id')
+        hospital_data = Hospital.fetch_from_db(hospital_id)
+        if hospital_data:
+            print(hospital_data)
+            return jsonify(hospital_data), 200
         else:
-            return jsonify({"message": "Driver not found"}), 404
-
-
+            return jsonify({"message": "Hospital not found"}), 404
+        
 def book_ambulance():
     data = request.json
     patient_id = data['patient_id']
