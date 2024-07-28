@@ -1,55 +1,37 @@
 # patient_routes.py
 
-from flask import jsonify, request
+from flask import jsonify, request,make_response
 from patient import Patient
 from driver import Driver
 from hospital import Hospital
 
-patients = {}
 hospitals = {}
 
 def patient_profile():
-    patient_id = request.args.get('id')
-    patient = patients.get(patient_id)
-    if patient:
-        return jsonify(patient.get_profile()), 200
-    else:
-        return jsonify({"message": "Patient not found"}), 404
+    if request.method == 'POST':
+        data = request.json
+        patient = Patient(
+            id=data['ID'],
+            name=data['Name'],
+            age=data['Age'],
+            gender=data['Age'],
+            curr_loc=data['Current_Location'],
+            phone=data['Phone_Number'],
+            email=data['Email']
+        )
+        patient.save_to_db()
+        return jsonify({"message": "Patient profile set successfully"}), 201
+    
+    elif request.method == 'GET':
+        patient_id = request.args.get('id')
+        patient = Patient.fetch_from_db(patient_id)
+        if patient:
+            response = make_response(jsonify(patient),200)
+            response.headers.set("content-type","application/json")
+            return response
+        else:
+            return jsonify({"message": "Driver not found"}), 404
 
-def create_patient_profile():
-    data = request.json
-    patient_id = data['id']
-    patient = Patient(
-        id=patient_id,
-        name=data['name'],
-        age=data['age'],
-        gender=data['gender'],
-        curr_loc=data['curr_loc']
-    )
-    patients[patient_id] = patient
-    patient.save_to_db()
-    return jsonify({"message": "Patient profile set successfully"}), 201
-
-def create_hospital_profile():
-    data = request.json
-    hospital_id = data['id']
-    hospital = Hospital(
-        id=hospital_id,
-        name=data['name'],
-        location=data['location'],
-        phn_num=data['phn_num']
-    )
-    hospitals[hospital_id] = hospital
-    hospital.save_to_db()
-    return jsonify({"message": "Hospital profile set successfully"}), 201
-
-def hospital_details():
-    hospital_id = request.args.get('id')
-    hospital = hospitals.get(hospital_id)
-    if hospital:
-        return jsonify(hospital.get_details()), 200
-    else:
-        return jsonify({"message": "Hospital not found"}), 404
 
 def book_ambulance():
     data = request.json

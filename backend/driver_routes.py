@@ -6,8 +6,6 @@ from driver import Driver
 def driver_profile():
     if request.method == 'POST':
         data = request.json
-        print(data)
-
         driver_id = data['ID']
         driver = Driver(
             id=driver_id,
