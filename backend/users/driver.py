@@ -42,22 +42,46 @@ class Driver:
 
     def get_request(self, patient, hospital, is_emergency):
         return {
+            "Driver": self.get_profile(),
             "Patient": patient.get_profile(),
             "Hospital": hospital.get_details(),
             "Is Emergency": is_emergency
         }
 
-    def action_on_request(self, is_accept, request_data):
-        if is_accept:
-            trip_data = {
-                "Driver ID": self.id,
-                "Patient ID": request_data['Patient']['ID'],
-                "Hospital ID": request_data['Hospital']['ID'],
-                "Start Location": request_data['Patient']['Current Location'],
-                "End Location": request_data['Hospital']['Location'],
-                "Is Emergency": request_data['Is Emergency']
-            }
-            response = supabase.table('trips').insert(trip_data).execute()
-            return "Request accepted and trip started", response
-        else:
-            return "Request rejected"
+    # def action_on_request(self, is_accept, request_data):
+    #     if is_accept:
+    #         trip_data = {
+    #             "Driver ID": self.id,
+    #             "Patient ID": request_data['Patient']['ID'],
+    #             "Hospital ID": request_data['Hospital']['ID'],
+    #             "Start Location": request_data['Patient']['Current Location'],
+    #             "End Location": request_data['Hospital']['Location'],
+    #             "Is Emergency": request_data['Is Emergency']
+    #         }
+    #         response = supabase.table('trips').insert(trip_data).execute()
+    #         return "Request accepted and trip started", response
+    #     else:
+    #         return "Request rejected"
+
+    @classmethod
+    def fetch_active_drivers(cls, patient_location):
+        response = supabase.table('drivers').select('*').eq('Is Active', True).execute()
+        drivers_data = response.data
+        
+        patient_coords = tuple(map(float, patient_location.split(',')))
+        
+        drivers = []
+        for data in drivers_data:
+            driver_coords = tuple(map(float, data['Current Location'].split(',')))
+            distance = geodesic(patient_coords, driver_coords).km
+            drivers.append((distance, cls(
+                id=data['ID'],
+                name=data['Name'],
+                vehicle_num=data['Vehicle Number'],
+                vehicle_type=data['Vehicle Type'],
+                curr_loc=data['Current Location'],
+                is_active=data['Is Active']
+            )))
+        
+        drivers.sort(key=lambda x: x[0])
+        return [driver for distance, driver in drivers]

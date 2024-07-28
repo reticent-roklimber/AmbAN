@@ -25,19 +25,19 @@ def hospital_details():
         else:
             return jsonify({"message": "Hospital not found"}), 404
         
-def book_ambulance():
-    data = request.json
-    patient_id = data['patient_id']
-    hospital_id = data['hospital_id']
-    is_emergency = data['is_emergency']
-    driver_id = data['driver_id']
+def fetch_nearby_hospitals():
+    patient_location = request.args.get('location')  # Coordinates in string format "lat,lon"
+    patient_coords = tuple(map(float, patient_location.split(',')))
 
-    patient = Patient.fetch_from_db(patient_id)
-    hospital = Hospital.fetch_from_db(hospital_id)
-    driver = Driver.fetch_from_db(driver_id)
+    response = supabase.table('hospitals').select('*').execute()
+    hospitals_data = response.data
 
-    if patient and hospital and driver and driver.is_active:
-        request_data = driver.get_request(patient, hospital, is_emergency)
-        return jsonify({"request_data": request_data}), 200
-    else:
-        return jsonify({"message": "Active driver or patient or hospital not found"}), 404
+    hospitals = []
+    for data in hospitals_data:
+        hospital_coords = tuple(map(float, data['Location'].split(',')))
+        distance = geodesic(patient_coords, hospital_coords).km
+        hospitals.append((distance, data))
+
+    hospitals.sort(key=lambda x: x[0])
+    nearby_hospitals = [hospital for distance, hospital in hospitals[:5]]
+    return jsonify(nearby_hospitals)
